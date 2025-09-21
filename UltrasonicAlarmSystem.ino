@@ -4,6 +4,9 @@
 #define alarmPin 8
 #define USEcho 10
 #define USTrigger 9
+#define redLed1 2
+#define redLed2 7
+
 float timing = 0.0;
 float distance = 0.0;
 
@@ -12,6 +15,8 @@ void setup() {
   pinMode(alarmPin, OUTPUT);
   pinMode(USEcho, INPUT);
   pinMode(USTrigger, OUTPUT);
+  pinMode(redLed1, OUTPUT);
+  pinMode(redLed2, OUTPUT);
 
   Serial.begin(9600);
   Serial.println("Starting the Ultrasonic Alarm System");
@@ -35,10 +40,14 @@ void loop() {
   Serial.println("in");
 
  
-  if (distance <= 50) {
+  if (distance <= 20) {
     tone(alarmPin, 500);
+    digitalWrite(redLed1, HIGH);
+    digitalWrite(redLed2, HIGH);
   } else {
     noTone(alarmPin);
+    digitalWrite(redLed1, LOW);
+    digitalWrite(redLed2, LOW);
   }
 
   delay(100);
