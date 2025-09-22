@@ -3,6 +3,9 @@
 // Import libraries
 
 #include <LiquidCrystal.h>
+#include <Servo.h>
+
+Servo myservo;
 
 // Set pins
 #define alarmPin 8
@@ -11,10 +14,13 @@
 #define latchPin 11
 #define clockPin 13
 #define dataPin 12
+#define servoPin 1
 
 
 float timing = 0.0;
 float distance = 0.0;
+
+int servoPos = 0;
 
 byte leds = 0;
 
@@ -30,9 +36,11 @@ void setup() {
   pinMode(clockPin, OUTPUT);
   pinMode(dataPin, OUTPUT);
 
+  myservo.attach(servoPin);
+  myservo.write(servoPos);
 
-  Serial.begin(9600);
-  Serial.println("Starting the Ultrasonic Alarm System");
+
+
 
   // start lcd display
   lcd.begin(16, 2);
@@ -46,8 +54,12 @@ void updateShiftRegister()
   digitalWrite(latchPin, HIGH);
 }
 
+bool rotateServo = true;
+bool increaseDegree = true;
+
 
 void loop() {
+
   lcd.clear();
   leds = 0;
   digitalWrite(USTrigger, LOW);
@@ -62,11 +74,6 @@ void loop() {
   // Speed of sound is 0.034 : Speed of sound ≈ 343 meters per second at room temperature (20 °C).
   distance = (timing * 0.034) / 2;
 
-  Serial.print("Distance: ");
-  Serial.print(distance);
-  Serial.print("cm | ");
-  Serial.print(distance / 2.54);
-  Serial.println("in");
 
   lcd.setCursor(0, 1);
 
@@ -80,35 +87,56 @@ void loop() {
     lcd.print("No Detections");
 
   }
-  
-  
-
 
   lcd.setCursor(0, 0);
   if (distance <= 20) {
     // turn on middle 3 leds
-    lcd.print("WARNING");
+    lcd.print("DANGER");
 
     leds = 3;
     updateShiftRegister();
+    rotateServo = false;
     
-    tone(alarmPin, 250);
+    tone(alarmPin, 500);
   }  else if (distance <= 50) {
     // turn on first 3 leds
-    lcd.print("DANGER");
+    lcd.print("WARNING");
+    rotateServo = false;
 
     leds = 28;
     updateShiftRegister();
-    tone(alarmPin, 150);
+    tone(alarmPin, 250);
   } else {
     lcd.print("NO THREATS");
+    rotateServo = true;
 
     leds = 224;
     updateShiftRegister();
     // turn on last 3 leds
     noTone(alarmPin);
   }
-  Serial.println(leds);
+
+
+  if (rotateServo) {
+    // no threats
+
+    if (increaseDegree) {
+      // right
+      servoPos += 10;
+
+      if (servoPos >= 180) {
+        increaseDegree = false;
+      }
+    } else {
+      servoPos -= 10;
+      if (servoPos <= 0 ) {
+        increaseDegree = true;
+      }
+    }
+
+    myservo.write(servoPos);
+
+  }
 
   delay(300);
 }
